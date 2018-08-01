@@ -14,7 +14,7 @@ class DataGenerator(keras.utils.Sequence):
 
         all_image_names = list(set([os.path.splitext(name)[0] for name in os.listdir(self.images_dir)]))
         self.image_names = [name for name in all_image_names if int(name.split('_')[1]) in series_idxs]
-        self.indexes = np.arange(len(self.image_names))
+        self.idxs = np.arange(len(self.image_names))
         self.on_epoch_end()
 
     def __len__(self):
@@ -23,17 +23,17 @@ class DataGenerator(keras.utils.Sequence):
 
     def __getitem__(self, index):
         """Generate a single batch"""
-        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        idxs = self.idxs[index*self.batch_size:(index+1)*self.batch_size]
         x = np.empty((self.batch_size, *self.image_size))
         y = np.empty((self.batch_size, *self.image_size))
-        for i, image_idx in enumerate(indexes):
+        for i, image_idx in enumerate(idxs):
             x[i] = self._load_image(image_idx, '.jpg')
             y[i] = self._load_image(image_idx, '.bmp')
 
         return x, y
 
     def on_epoch_end(self):
-        np.random.shuffle(self.indexes)
+        np.random.shuffle(self.idxs)
 
     def _load_image(self, image_idx, extension):
         image_path = os.path.join(self.images_dir, self.image_names[image_idx] + extension)
