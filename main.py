@@ -2,19 +2,17 @@ import time
 import os
 
 import numpy as np
-from keras.metrics import mean_squared_error
-from keras.optimizers import *
+from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 
 from data_handling import DataGenerator
-from metrics import rmse
 from models import identity, simplest, unet
 
 
 class Config:
     def __init__(self):
-        self.seed = 1337
+        self.seed = 0
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         self.image_shape = [512, 512, 1]
         curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
@@ -27,7 +25,7 @@ class Config:
 
         self.batch_size = 16
         self.lr = 1e-4
-        self.epochs = 2
+        self.epochs = 50
 
         self.model_fun = simplest
 
