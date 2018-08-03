@@ -11,8 +11,7 @@ from models import identity, simplest, unet
 
 
 class Config:
-    def __init__(self):
-        self.seed = 0
+    def __init__(self, params):
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         self.image_shape = [512, 512, 1]
         curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
@@ -24,7 +23,7 @@ class Config:
         self.num_series = 10
 
         self.batch_size = 4
-        self.lr = 1e-4
+        self.lr = params.get('lr', 1e-4)
         self.epochs = 50
 
         self.model_fun = unet#simplest
@@ -33,8 +32,6 @@ class Config:
 class Model:
     def __init__(self, config):
         self.config = config
-
-        np.random.seed(config.seed)
 
         os.mkdir(config.run_output_dir)
         self.datasets_series_idxs = self._separate_train_val_test()
@@ -82,10 +79,23 @@ class Model:
                 for name in dataset_names}
 
 
-def main():
-    model = Model(Config())
+def main(params={}):
+    model = Model(Config(params))
     model.run()
 
 
+def main_params_search():
+    seed = 1
+    num_runs = 20
+
+    np.random.seed(seed)
+
+    for idx in range(num_runs):
+        lr = 10 ** np.random.uniform(-6, -2)
+
+        print('Run #{}, lr={}'.format(idx, lr))
+        main({'lr': lr})
+
+
 if __name__ == '__main__':
-    main()
+    main_params_search()
