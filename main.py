@@ -23,11 +23,11 @@ class Config:
         self.val_ratio = 0.2
         self.num_series = 10
 
-        self.batch_size = 16
+        self.batch_size = 4
         self.lr = 1e-4
         self.epochs = 50
 
-        self.model_fun = simplest
+        self.model_fun = unet#simplest
 
 
 class Model:
