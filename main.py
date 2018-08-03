@@ -8,6 +8,7 @@ from keras.models import load_model
 
 from data_handling import DataGenerator
 from models import identity, simplest, unet
+from pprint import pprint, pformat
 
 
 class Config:
@@ -17,6 +18,7 @@ class Config:
         curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
         self.run_output_dir = 'run_output_' + curr_time
         self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
+        self.log_path = os.path.join(self.run_output_dir, 'log.txt')
 
         self.train_ratio = 0.6
         self.val_ratio = 0.2
@@ -28,12 +30,16 @@ class Config:
 
         self.model_fun = unet#simplest
 
+        print(pformat(vars(self)))
+        os.mkdir(self.run_output_dir)
+        with open(self.log_path, 'w') as f:
+            print(pformat( vars(self)), file=f)
+
 
 class Model:
     def __init__(self, config):
         self.config = config
 
-        os.mkdir(config.run_output_dir)
         self.datasets_series_idxs = self._separate_train_val_test()
         self.data_generators = self._get_data_generators()
         self.model = self._build_model()
@@ -55,7 +61,10 @@ class Model:
     def evaluate(self, dataset_name='val'):
         loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
         loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
-        print('loss_rmse = {}'.format(loss_rmse), 'metric_rmse = = {}'.format(metric_rmse))
+        result_str = 'loss_rmse = {}'.format(loss_rmse), 'metric_rmse = = {}'.format(metric_rmse)
+        print(result_str)
+        with open(self.config.log_path, 'a') as f:
+            print(result_str, file=f)
 
     def _build_model(self):
         model = self.config.model_fun(self.config.image_shape)
