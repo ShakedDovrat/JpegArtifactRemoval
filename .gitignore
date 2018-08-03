@@ -1,1 +1,4 @@
 .idea
+**/*.pyc
+run_output*
+

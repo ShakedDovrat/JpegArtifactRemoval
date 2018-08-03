@@ -37,4 +37,4 @@ class DataGenerator(keras.utils.Sequence):
 
     def _load_image(self, image_idx, extension):
         image_path = os.path.join(self.images_dir, self.image_names[image_idx] + extension)
-        return cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        return np.expand_dims(cv2.imread(image_path, cv2.IMREAD_GRAYSCALE), axis=-1)
