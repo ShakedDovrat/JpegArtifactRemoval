@@ -57,7 +57,7 @@ class DataNormalizer:
         means = []
         progress_bar = generic_utils.Progbar(len(series_idxs))
         for series_idx in series_idxs:
-            cache_file = os.path.join(self.config.images_dir, self.file_name_format.format(series_idx))
+            cache_file = os.path.join(self.config.images_dir, '..', self.file_name_format.format(series_idx))
             if os.path.exists(cache_file):
                 with open(cache_file, 'rb') as f:
                     curr_mean = pickle.load(f)
@@ -72,8 +72,12 @@ class DataNormalizer:
 
     def _calc_data_mean(self, series_idx):
         logging.info('Calculating data mean for series #{0:03d}'.format(series_idx))
-        generator = DataGenerator(self.config.images_dir, (series_idx,), batch_size=self.config.batch_size,
+        generator = DataGenerator(self.config.images_dir, (series_idx,), batch_size=10,
                                   image_size=self.config.image_shape, load_x_only=True)
-        mean = np.mean([np.mean(x.flatten()) for x, _ in generator])
+        # mean = np.mean([np.mean(x.flatten()) for x, _ in generator])
+        means = np.zeros(len(generator))
+        for i in range(len(generator)):
+            x, _ = generator[i]
+            means[i] = np.mean(x.flatten())
         logging.info('Done.')
-        return mean
+        return np.mean(means)
