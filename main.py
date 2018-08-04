@@ -8,7 +8,7 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
 
-from data_handling import DataGenerator, find_data_mean
+from data_handling import DataGenerator, DataNormalizer
 from models import identity, simplest, unet, unet_16
 from pprint import pformat
 
@@ -36,7 +36,7 @@ class Config:
         self.model_fun = unet_16  # unet  # simplest
 
         self._set_logger()
-        logging.info(pformat(vars(self)))
+        logging.info('Config = ' + pformat(vars(self)))
 
     def _set_logger(self):
         logger = logging.getLogger()
@@ -57,10 +57,10 @@ class Config:
 class Model:
     def __init__(self, config):
         self.config = config
-
         self.datasets_series_idxs = self._separate_train_val_test()
         self.data_generators = self._get_data_generators()
         self.model = self._build_model()
+        logging.info('Model = ' + pformat(vars(self)))
 
     def run(self):
         self.train()
@@ -95,11 +95,9 @@ class Model:
                 'test': idxs[num_train_series + num_val_series:]}
 
     def _get_data_generators(self):
-        train_generator = DataGenerator(self.config.images_dir, self.datasets_series_idxs['train'],
-                                        self.config.batch_size, image_size=self.config.image_shape)
-        data_mean_path = os.path.join(self.config.images_dir,
-                                      'data_mean_{}.pkl'.format(self.datasets_series_idxs['train']))
-        data_mean = find_data_mean(train_generator, data_mean_path)
+        normalizer = DataNormalizer(self.config)
+        data_mean = normalizer.get_data_mean(self.datasets_series_idxs['train'])
+
         dataset_names = ('train', 'val', 'test')
         return {name: DataGenerator(self.config.images_dir, self.datasets_series_idxs[name], self.config.batch_size,
                                     image_size=self.config.image_shape, data_mean=data_mean)

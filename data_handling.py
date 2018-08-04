@@ -4,16 +4,18 @@ import logging
 
 import numpy as np
 import keras
+from keras.utils import generic_utils
 import cv2
 
 
 class DataGenerator(keras.utils.Sequence):
-    def __init__(self, images_dir, series_idxs, batch_size, image_size, data_mean=0.0):
+    def __init__(self, images_dir, series_idxs, batch_size, image_size, data_mean=0.0, load_x_only=False):
         self.images_dir = images_dir
         self.series_idxs = series_idxs
         self.batch_size = batch_size
         self.image_size = image_size
         self.data_mean = data_mean
+        self.load_x_only = load_x_only
 
         all_image_names = list(set([os.path.splitext(name)[0] for name in os.listdir(self.images_dir)]))
         self.image_names = [name for name in all_image_names if int(name.split('_')[1]) in series_idxs]
@@ -31,7 +33,10 @@ class DataGenerator(keras.utils.Sequence):
         y = np.empty((self.batch_size, *self.image_size))
         for i, image_idx in enumerate(idxs):
             x[i] = self._load_image(image_idx, '.jpg')
-            y[i] = self._load_image(image_idx, '.bmp')
+            if self.load_x_only:
+                y[i] = None
+            else:
+                y[i] = self._load_image(image_idx, '.bmp')
 
         return x, y
 
@@ -49,9 +54,45 @@ def find_data_mean(generator, cache_file, use_cache=True):
             return pickle.load(f)
     else:
         logging.info('Calculating data mean')
-        means = [np.mean(x.flatten()) for x, _ in generator]
+        # means = [np.mean(x.flatten()) for x, _ in generator]
+        means = np.zeros(len(generator))
+        progress_bar = generic_utils.Progbar(len(generator))
+        for i, (x, _) in enumerate(generator):
+            means[i] = np.mean(x.flatten())
+            progress_bar.add(1)
+
         mean = np.mean(means)
-        logging.info('Done.')
         with open(cache_file, 'wb') as f:
             pickle.dump(mean, f)
+        return mean
+
+
+class DataNormalizer:
+    def __init__(self, config):
+        self.config = config
+        self.file_name_format = 'data_mean_series_{0:03d}.pkl'
+
+    def get_data_mean(self, series_idxs):
+        means = []
+        progress_bar = generic_utils.Progbar(len(series_idxs))
+        for series_idx in series_idxs:
+            cache_file = os.path.join(self.config.images_dir, self.file_name_format.format(series_idx))
+            if os.path.exists(cache_file):
+                with open(cache_file, 'rb') as f:
+                    curr_mean = pickle.load(f)
+            else:
+                curr_mean = self._calc_data_mean(series_idx)
+                with open(cache_file, 'wb') as f:
+                    pickle.dump(curr_mean, f)
+            means.append(curr_mean)
+            progress_bar.add(1)
+
+        return np.mean(means)
+
+    def _calc_data_mean(self, series_idx):
+        logging.info('Calculating data mean for series #{0:03d}'.format(series_idx))
+        generator = DataGenerator(self.config.images_dir, (series_idx,), batch_size=self.config.batch_size,
+                                  image_size=self.config.image_shape, load_x_only=True)
+        mean = np.mean([np.mean(x.flatten()) for x, _ in generator])
+        logging.info('Done.')
         return mean
