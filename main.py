@@ -9,30 +9,31 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceL
 from keras.models import load_model
 
 from data_handling import DataGenerator
-from models import identity, simplest, unet
-from pprint import pprint, pformat
+from models import identity, simplest, unet, unet_16
+from pprint import pformat
 
 
 class Config:
     def __init__(self, params):
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
-        self.image_shape = [512, 512, 1]
         base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
-        curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
-        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + curr_time)
+
+        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
         os.makedirs(self.run_output_dir)
         self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
         self.log_path = os.path.join(self.run_output_dir, 'log.txt')
 
-        self.train_ratio = 0.6
-        self.val_ratio = 0.2
+        self.image_shape = [512, 512, 1]
         self.num_series = 10
 
-        self.batch_size = 2
+        self.train_ratio = 0.6
+        self.val_ratio = 0.2
+
+        self.batch_size = 8
         self.lr = params.get('lr', 1e-4)
         self.epochs = 50
 
-        self.model_fun = unet  # simplest
+        self.model_fun = unet_16  # unet  # simplest
 
         self._set_logger()
         logging.info(pformat(vars(self)))
