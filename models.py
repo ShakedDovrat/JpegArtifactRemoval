@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Lambda, Conv2D, MaxPooling2D, Dropout, Input, UpSampling2D, merge
+from keras.layers import Lambda, Conv2D, MaxPooling2D, Dropout, Input, UpSampling2D
 from keras.layers.merge import concatenate
 from keras.models import Model
 

@@ -2,6 +2,7 @@ import time
 import os
 import logging
 import sys
+from pprint import pformat
 
 import numpy as np
 from keras.optimizers import Adam
@@ -10,7 +11,6 @@ from keras.models import load_model
 
 from data_handling import DataGenerator, DataNormalizer
 from models import identity, simplest, unet, unet_16, srcnn, ar_cnn
-from pprint import pformat
 
 
 class Config:
@@ -138,3 +138,4 @@ if __name__ == '__main__':
 # TODO:
 # - data augmentations
 # - try more models
+# - try a window of k images as input
