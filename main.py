@@ -9,7 +9,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceL
 from keras.models import load_model
 
 from data_handling import DataGenerator, DataNormalizer
-from models import identity, simplest, unet, unet_16, srcnn
+from models import identity, simplest, unet, unet_16, srcnn, ar_cnn
 from pprint import pformat
 
 
@@ -30,7 +30,7 @@ class Config:
         self.epochs = 100
 
         # Model params
-        self.model_fun = srcnn  # simplest  # unet_16  # unet
+        self.model_fun = ar_cnn  # srcnn,simplest,unet,unet_16
 
         self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
         os.makedirs(self.run_output_dir)
