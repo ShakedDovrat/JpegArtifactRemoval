@@ -15,8 +15,9 @@ class Config:
     def __init__(self, params):
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         self.image_shape = [512, 512, 1]
+        base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
         curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
-        self.run_output_dir = 'run_output_' + curr_time
+        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + curr_time)
         self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
         self.log_path = os.path.join(self.run_output_dir, 'log.txt')
 
