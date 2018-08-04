@@ -48,25 +48,6 @@ class DataGenerator(keras.utils.Sequence):
         return np.expand_dims(cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) - self.data_mean, axis=-1)
 
 
-def find_data_mean(generator, cache_file, use_cache=True):
-    if use_cache and os.path.exists(cache_file):
-        with open(cache_file, 'rb') as f:
-            return pickle.load(f)
-    else:
-        logging.info('Calculating data mean')
-        # means = [np.mean(x.flatten()) for x, _ in generator]
-        means = np.zeros(len(generator))
-        progress_bar = generic_utils.Progbar(len(generator))
-        for i, (x, _) in enumerate(generator):
-            means[i] = np.mean(x.flatten())
-            progress_bar.add(1)
-
-        mean = np.mean(means)
-        with open(cache_file, 'wb') as f:
-            pickle.dump(mean, f)
-        return mean
-
-
 class DataNormalizer:
     def __init__(self, config):
         self.config = config
