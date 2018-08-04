@@ -154,3 +154,4 @@ if __name__ == '__main__':
 # - try a window of k images as input
 # - delete `load_x_only`
 # - is the root in rmse per-image or overall?
+# - try a res-net based model
