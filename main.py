@@ -18,32 +18,33 @@ class Config:
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
 
-        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
-        os.makedirs(self.run_output_dir)
-        self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
-        self.log_path = os.path.join(self.run_output_dir, 'log.txt')
-
+        # Data params
         self.image_shape = [512, 512, 1]
         self.num_series = 10
-
         self.train_ratio = 0.6
         self.val_ratio = 0.2
 
+        # Train params
         self.batch_size = 8
         self.lr = params.get('lr', 1e-4)
         self.epochs = 50
 
+        # Model params
         self.model_fun = unet_16  # unet  # simplest
 
+        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
+        os.makedirs(self.run_output_dir)
+        self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
         self._set_logger()
         logging.info('Config = ' + pformat(vars(self)))
 
     def _set_logger(self):
-        logger = logging.getLogger()
+        log_path = os.path.join(self.run_output_dir, 'log.txt')
 
+        logger = logging.getLogger()
         formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 
-        file_handler = logging.FileHandler(self.log_path)
+        file_handler = logging.FileHandler(log_path)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
@@ -133,3 +134,7 @@ def main_params_search():
 
 if __name__ == '__main__':
     main_params_search()
+
+# TODO:
+# - data augmentations
+# - try more models
