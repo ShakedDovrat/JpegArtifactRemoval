@@ -73,10 +73,23 @@ def unet(input_size, base_num_filters=64):
     return model
 
 
-def srcnn(input_size):
+def srcnn(input_size, num_filters=64):
+    # from: C. Dong, C. C. Loy, K. He, and X. Tang. "Learning a deep convolutional network for image super-resolution"
+    # as referenced by: C. Dong, Y. Deng, C. Change Loy, and X. Tang, “Compression artifacts reduction by a deep convolutional network”
     inputs = Input(input_size)
-    conv1 = Conv2D(64, 3, activation='relu', padding='same')(inputs)
-    conv2 = Conv2D(64, 3, activation='relu', padding='same')(conv1)
+    conv1 = Conv2D(num_filters, 3, activation='relu', padding='same')(inputs)
+    conv2 = Conv2D(num_filters, 3, activation='relu', padding='same')(conv1)
     conv3 = Conv2D(1, 3, padding='same')(conv2)
     model = Model(input=inputs, output=conv3)
+    return model
+
+
+def ar_cnn(input_size, num_filters=64):
+    # from: C. Dong, Y. Deng, C. Change Loy, and X. Tang, “Compression artifacts reduction by a deep convolutional network”
+    inputs = Input(input_size)
+    conv1 = Conv2D(num_filters, 3, activation='relu', padding='same')(inputs)
+    conv2 = Conv2D(num_filters, 3, activation='relu', padding='same')(conv1)
+    conv3 = Conv2D(num_filters, 3, activation='relu', padding='same')(conv2)
+    conv4 = Conv2D(1, 3, padding='same')(conv3)
+    model = Model(input=inputs, output=conv4)
     return model
