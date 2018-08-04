@@ -1,5 +1,6 @@
 from keras.models import Sequential
-from keras.layers import Lambda, Conv2D, MaxPooling2D, Dropout, Input, UpSampling2D
+from keras.layers import Lambda, Conv2D, MaxPooling2D, Dropout, Input, UpSampling2D, BatchNormalization, Activation
+from keras import activations
 from keras.layers.merge import concatenate
 from keras.models import Model
 
@@ -93,3 +94,21 @@ def ar_cnn(input_size, num_filters=64):
     conv4 = Conv2D(1, 3, padding='same')(conv3)
     model = Model(input=inputs, output=conv4)
     return model
+
+
+def dn_cnn(input_size, depth, num_filters=64):
+    # from: K. Zhang, W. Zuo, Y. Chen, D. Meng, and L. Zhang. "Beyond a Gaussian denoiser: Residual learning of deep CNN for image denoising"
+    inputs = Input(input_size)
+    relu = Conv2D(num_filters, 3, activation='relu', padding='same')(inputs)
+    for _ in range(1, depth):
+        conv = Conv2D(num_filters, 3, padding='same')(relu)
+        bn = BatchNormalization()(conv)
+        relu = Activation(activations.relu)(bn)
+
+    conv_n = Conv2D(1, 3, padding='same')(relu)
+    model = Model(input=inputs, output=conv_n)
+    return model
+
+
+def dn_cnn_b(input_size, num_filters=64):
+    return dn_cnn(input_size, depth=20, num_filters=num_filters)

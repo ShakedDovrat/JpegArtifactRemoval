@@ -10,7 +10,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceL
 from keras.models import load_model
 
 from data_handling import DataGenerator, DataNormalizer
-from models import identity, simplest, unet, unet_16, srcnn, ar_cnn
+from models import identity, simplest, unet, unet_16, srcnn, ar_cnn, dn_cnn_b
 
 
 class Config:
@@ -25,12 +25,13 @@ class Config:
         self.val_ratio = 0.2
 
         # Train params
-        self.batch_size = 8
+        self.batch_size = 1
         self.lr = params.get('lr', 1e-4)
         self.epochs = 100
 
         # Model params
-        self.model_fun = ar_cnn  # srcnn,simplest,unet,unet_16
+        self.model_fun = dn_cnn_b  # srcnn,simplest,unet,unet_16,ar_cnn
+        self.is_residual = self.model_fun.__name__.startswith('dn_cnn')
 
         self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
         os.makedirs(self.run_output_dir)
@@ -75,9 +76,20 @@ class Model:
                                  validation_data=self.data_generators['val'], callbacks=callbacks)
 
     def evaluate(self, dataset_name='val'):
-        loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
-        loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
-        result_str = 'loss_rmse = {}'.format(loss_rmse), 'metric_rmse = = {}'.format(metric_rmse)
+        if self.config.is_residual:
+            generator = self.data_generators[dataset_name]
+            rmse = np.zeros(len(generator))
+            for i in range(len(generator)):
+                x, y = generator[i]
+                y_res = self.model.predict(x)
+                y_hat = x + y_res
+                rmse[i] = np.linalg.norm((y_hat - y).flatten(), ord=2)  #TODO: is the root in rmse per-image or overall? In this implementation it's per-batch.
+            rmse_total = np.mean(rmse)
+            result_str = '{}: rmse = {}'.format(dataset_name, rmse_total)
+        else:
+            loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
+            loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
+            result_str = '{}: loss_rmse = {}; metric_rmse = {}'.format(dataset_name, loss_rmse, metric_rmse)
         logging.info(result_str)
 
     def _build_model(self):
@@ -101,7 +113,8 @@ class Model:
 
         dataset_names = ('train', 'val', 'test')
         return {name: DataGenerator(self.config.images_dir, self.datasets_series_idxs[name], self.config.batch_size,
-                                    image_size=self.config.image_shape, data_mean=data_mean)
+                                    image_size=self.config.image_shape, data_mean=data_mean,
+                                    is_residual=self.config.is_residual)
                 for name in dataset_names}
 
     def _get_callbacks(self):
@@ -139,3 +152,5 @@ if __name__ == '__main__':
 # - data augmentations
 # - try more models
 # - try a window of k images as input
+# - delete `load_x_only`
+# - is the root in rmse per-image or overall?

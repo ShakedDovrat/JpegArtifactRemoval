@@ -9,13 +9,15 @@ import cv2
 
 
 class DataGenerator(keras.utils.Sequence):
-    def __init__(self, images_dir, series_idxs, batch_size, image_size, data_mean=0.0, load_x_only=False):
+    def __init__(self, images_dir, series_idxs, batch_size, image_size, data_mean=0.0, load_x_only=False,
+                 is_residual=False):
         self.images_dir = images_dir
         self.series_idxs = series_idxs
         self.batch_size = batch_size
         self.image_size = image_size
         self.data_mean = data_mean
         self.load_x_only = load_x_only
+        self.is_residual = is_residual
 
         all_image_names = list(set([os.path.splitext(name)[0] for name in os.listdir(self.images_dir)]))
         self.image_names = [name for name in all_image_names if int(name.split('_')[1]) in series_idxs]
@@ -37,6 +39,8 @@ class DataGenerator(keras.utils.Sequence):
                 y[i] = None
             else:
                 y[i] = self._load_image(image_idx, '.bmp')
+                if self.is_residual:
+                    y[i] -= x[i]
 
         return x, y
 
