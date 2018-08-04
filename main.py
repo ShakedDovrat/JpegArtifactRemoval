@@ -1,5 +1,7 @@
 import time
 import os
+import logging
+import sys
 
 import numpy as np
 from keras.optimizers import Adam
@@ -18,6 +20,7 @@ class Config:
         base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
         curr_time = time.strftime('%Y_%m_%d_%H_%M_%S')
         self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + curr_time)
+        os.makedirs(self.run_output_dir)
         self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
         self.log_path = os.path.join(self.run_output_dir, 'log.txt')
 
@@ -29,12 +32,25 @@ class Config:
         self.lr = params.get('lr', 1e-4)
         self.epochs = 50
 
-        self.model_fun = unet#simplest
+        self.model_fun = unet  # simplest
 
-        print(pformat(vars(self)))
-        os.mkdir(self.run_output_dir)
-        with open(self.log_path, 'w') as f:
-            print(pformat( vars(self)), file=f)
+        self._set_logger()
+        logging.info(pformat(vars(self)))
+
+    def _set_logger(self):
+        logger = logging.getLogger()
+
+        formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+
+        file_handler = logging.FileHandler(self.log_path)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+        logger.setLevel(logging.INFO)
 
 
 class Model:
@@ -60,14 +76,12 @@ class Model:
         loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
         loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
         result_str = 'loss_rmse = {}'.format(loss_rmse), 'metric_rmse = = {}'.format(metric_rmse)
-        print(result_str)
-        with open(self.config.log_path, 'a') as f:
-            print(result_str, file=f)
+        logging.info(result_str)
 
     def _build_model(self):
         model = self.config.model_fun(self.config.image_shape)
         model.compile(optimizer=Adam(lr=self.config.lr), loss='mean_squared_error', metrics=['mean_squared_error'])
-        model.summary()
+        model.summary(print_fn=logging.info)
         return model
 
     def _separate_train_val_test(self):
@@ -86,7 +100,6 @@ class Model:
                 for name in dataset_names}
 
     def _get_callbacks(self):
-
         checkpoint = ModelCheckpoint(self.config.trained_model_path, monitor='val_mean_squared_error',
                                      verbose=1, save_best_only=True)  # , save_weights_only=True)
         tensor_board = TensorBoard(self.config.run_output_dir, batch_size=self.config.batch_size)
