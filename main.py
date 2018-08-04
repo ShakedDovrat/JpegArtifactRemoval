@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
 
 from data_handling import DataGenerator
@@ -24,7 +24,7 @@ class Config:
         self.val_ratio = 0.2
         self.num_series = 10
 
-        self.batch_size = 4
+        self.batch_size = 2
         self.lr = params.get('lr', 1e-4)
         self.epochs = 50
 
@@ -50,10 +50,7 @@ class Model:
         self.evaluate()
 
     def train(self):
-        checkpoint = ModelCheckpoint(self.config.trained_model_path,
-                                     monitor='val_mean_squared_error',
-                                     verbose=1, save_best_only=True)  # , save_weights_only=True)
-        callbacks = [checkpoint]
+        callbacks = self._get_callbacks()
 
         self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,  # steps_per_epoch=train_samples_per_epoch,
                                  validation_data=self.data_generators['val'], callbacks=callbacks)
@@ -86,6 +83,16 @@ class Model:
         return {name: DataGenerator(self.config.images_dir, self.datasets_series_idxs[name], self.config.batch_size,
                                     image_size=self.config.image_shape)
                 for name in dataset_names}
+
+    def _get_callbacks(self):
+
+        checkpoint = ModelCheckpoint(self.config.trained_model_path, monitor='val_mean_squared_error',
+                                     verbose=1, save_best_only=True)  # , save_weights_only=True)
+        tensor_board = TensorBoard(self.config.run_output_dir, batch_size=self.config.batch_size)
+        early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=1, mode='auto')
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=1e-8, verbose=1)
+
+        return [checkpoint, tensor_board, reduce_lr, early_stop]
 
 
 def main(params={}):
