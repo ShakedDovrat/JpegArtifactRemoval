@@ -71,3 +71,12 @@ def unet(input_size, base_num_filters=64):
     model = Model(input=inputs, output=conv10)
 
     return model
+
+
+def srcnn(input_size):
+    inputs = Input(input_size)
+    conv1 = Conv2D(64, 3, activation='relu', padding='same')(inputs)
+    conv2 = Conv2D(64, 3, activation='relu', padding='same')(conv1)
+    conv3 = Conv2D(1, 3, padding='same')(conv2)
+    model = Model(input=inputs, output=conv3)
+    return model
