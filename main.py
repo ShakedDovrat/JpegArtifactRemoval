@@ -8,7 +8,7 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
 
-from data_handling import DataGenerator
+from data_handling import DataGenerator, find_data_mean
 from models import identity, simplest, unet, unet_16
 from pprint import pformat
 
@@ -95,9 +95,14 @@ class Model:
                 'test': idxs[num_train_series + num_val_series:]}
 
     def _get_data_generators(self):
+        train_generator = DataGenerator(self.config.images_dir, self.datasets_series_idxs['train'],
+                                        self.config.batch_size, image_size=self.config.image_shape)
+        data_mean_path = os.path.join(self.config.images_dir,
+                                      'data_mean_{}.pkl'.format(self.datasets_series_idxs['train']))
+        data_mean = find_data_mean(train_generator, data_mean_path)
         dataset_names = ('train', 'val', 'test')
         return {name: DataGenerator(self.config.images_dir, self.datasets_series_idxs[name], self.config.batch_size,
-                                    image_size=self.config.image_shape)
+                                    image_size=self.config.image_shape, data_mean=data_mean)
                 for name in dataset_names}
 
     def _get_callbacks(self):
