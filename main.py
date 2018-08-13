@@ -124,8 +124,8 @@ class Model:
         checkpoint = ModelCheckpoint(self.config.trained_model_path, monitor='val_mean_squared_error',
                                      verbose=1, save_best_only=True)  # , save_weights_only=True)
         tensor_board = TensorBoard(self.config.run_output_dir, batch_size=self.config.batch_size)
-        early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=1, mode='auto')
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=1e-8, verbose=1)
+        early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto')
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=1e-8, verbose=1)
 
         return [checkpoint, tensor_board, reduce_lr, early_stop]
 
