@@ -130,22 +130,19 @@ class Model:
         return [checkpoint, tensor_board, reduce_lr, early_stop]
 
     def _save_training_graphs(self, history):
+        def sub_plot(metric_name, title):
+            plt.plot(history.history[metric_name])
+            plt.plot(history.history['val_' + metric_name])
+            plt.title(title)
+            plt.ylabel(metric_name)
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+
         plt.figure()
         plt.subplot(211)
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('Model Loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-
+        sub_plot('loss', 'Model Loss')
         plt.subplot(212)
-        plt.plot(history.history['mean_squared_error'])
-        plt.plot(history.history['val_mean_squared_error'])
-        plt.title('Model Error')
-        plt.ylabel('MSE')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
+        sub_plot('mean_squared_error', 'Model Error')
 
         plt.savefig(os.path.join(self.config.run_output_dir, 'training.png'))
         plt.close()
