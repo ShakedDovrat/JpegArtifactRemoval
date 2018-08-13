@@ -12,6 +12,7 @@ Simple network for image-to-image translation. Implemented variations:
 2. Try more models, especially ResNet-based models.
 3. Try a window of `2*k+1` adjacent images in order to reconstruct the middle image.
 4. Try generative-based models.
+5. Try a different loss function.
 
 ### List of relevant papers
 Compression Artifacts Removal Using Convolutional Neural Networks
