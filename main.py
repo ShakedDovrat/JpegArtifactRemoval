@@ -83,7 +83,7 @@ class Model:
                 x, y = generator[i]
                 y_res = self.model.predict(x)
                 y_hat = x + y_res
-                rmse[i] = np.linalg.norm((y_hat - y).flatten(), ord=2)  #TODO: is the root in rmse per-image or overall? In this implementation it's per-batch.
+                rmse[i] = np.linalg.norm((y_hat - y).flatten(), ord=2)  #TODO: sqrt should be per-image and not per-batch.
             rmse_total = np.mean(rmse)
             result_str = '{}: rmse = {}'.format(dataset_name, rmse_total)
         else:
@@ -147,12 +147,3 @@ def main_params_search():
 
 if __name__ == '__main__':
     main_params_search()
-
-# TODO:
-# - data augmentations
-# - try more models
-# - try a window of k images as input
-# - delete `load_x_only`
-# - is the root in rmse per-image or overall?
-# - try a res-net based model
-# - u-net initializer?
