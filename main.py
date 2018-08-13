@@ -76,7 +76,7 @@ class Model:
 
     def test(self):
         self.model = load_model(self.config.trained_model_path)
-        self._evaluate()
+        self._evaluate('test')
 
     def _evaluate(self, dataset_name='val'):
         if self.config.is_residual:
@@ -177,6 +177,6 @@ def params_search():
 
 
 if __name__ == '__main__':
-    train()
+    # train()
     # test()
-    # params_search()
+    params_search()
