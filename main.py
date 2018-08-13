@@ -8,6 +8,7 @@ import numpy as np
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
+import matplotlib.pyplot as plt
 
 from data_handling import DataGenerator, DataNormalizer
 from models import identity, simplest, unet, unet_16, srcnn, ar_cnn, dn_cnn_b
@@ -69,8 +70,9 @@ class Model:
     def train(self):
         callbacks = self._get_callbacks()
 
-        self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,
-                                 validation_data=self.data_generators['val'], callbacks=callbacks)
+        history = self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,
+                                           validation_data=self.data_generators['val'], callbacks=callbacks)
+        self._save_training_graphs(history)
 
     def test(self):
         self.model = load_model(self.config.trained_model_path)
@@ -126,6 +128,27 @@ class Model:
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=10, min_lr=1e-8, verbose=1)
 
         return [checkpoint, tensor_board, reduce_lr, early_stop]
+
+    def _save_training_graphs(self, history):
+        plt.figure()
+        plt.subplot(211)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('Model Loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+
+        plt.subplot(212)
+        plt.plot(history.history['mean_squared_error'])
+        plt.plot(history.history['val_mean_squared_error'])
+        plt.title('Model Error')
+        plt.ylabel('MSE')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+
+        plt.savefig(os.path.join(self.config.run_output_dir, 'training.png'))
+        plt.close()
 
 
 def test():
