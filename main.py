@@ -72,7 +72,7 @@ class Model:
     def train(self):
         callbacks = self._get_callbacks()
 
-        self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,  # steps_per_epoch=train_samples_per_epoch,
+        self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,
                                  validation_data=self.data_generators['val'], callbacks=callbacks)
 
     def evaluate(self, dataset_name='val'):
