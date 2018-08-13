@@ -1,5 +1,7 @@
 # JpegArtifactRemoval
 
+
+### List of relevant papers
 Compression Artifacts Removal Using Convolutional Neural Networks
 https://arxiv.org/pdf/1605.00366.pdf
 
