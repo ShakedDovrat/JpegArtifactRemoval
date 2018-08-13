@@ -14,7 +14,7 @@ from models import identity, simplest, unet, unet_16, srcnn, ar_cnn, dn_cnn_b
 
 
 class Config:
-    def __init__(self, params):
+    def __init__(self, model_dir=None, params={}):
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
 
@@ -33,8 +33,10 @@ class Config:
         self.model_fun = dn_cnn_b  # srcnn,simplest,unet,unet_16,ar_cnn
         self.is_residual = self.model_fun.__name__.startswith('dn_cnn')
 
-        self.run_output_dir = os.path.join(base_output_dir, 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S'))
-        os.makedirs(self.run_output_dir)
+        model_dir = model_dir or 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S')
+        self.run_output_dir = os.path.join(base_output_dir, model_dir)
+        if not os.path.exists(self.run_output_dir):
+            os.makedirs(self.run_output_dir)
         self.trained_model_path = os.path.join(self.run_output_dir, 'best_model.h5')
         self._set_logger()
         logging.info('Config = ' + pformat(vars(self)))
@@ -64,27 +66,26 @@ class Model:
         self.model = self._build_model()
         logging.info('Model = ' + pformat(vars(self)))
 
-    def run(self):
-        self.train()
-        self.model = load_model(self.config.trained_model_path)
-        self.evaluate()
-
     def train(self):
         callbacks = self._get_callbacks()
 
         self.model.fit_generator(self.data_generators['train'], epochs=self.config.epochs,
                                  validation_data=self.data_generators['val'], callbacks=callbacks)
 
-    def evaluate(self, dataset_name='val'):
+    def test(self):
+        self.model = load_model(self.config.trained_model_path)
+        self._evaluate()
+
+    def _evaluate(self, dataset_name='val'):
         if self.config.is_residual:
             generator = self.data_generators[dataset_name]
-            rmse = np.zeros(len(generator))
+            rmse = np.zeros((self.config.batch_size, len(generator)))
             for i in range(len(generator)):
                 x, y = generator[i]
                 y_res = self.model.predict(x)
                 y_hat = x + y_res
-                rmse[i] = np.linalg.norm((y_hat - y).flatten(), ord=2)  #TODO: sqrt should be per-image and not per-batch.
-            rmse_total = np.mean(rmse)
+                rmse[:, i] = [np.linalg.norm(diff.flatten(), ord=2) for diff in y_hat - y]
+            rmse_total = np.mean(rmse.flatten())
             result_str = '{}: rmse = {}'.format(dataset_name, rmse_total)
         else:
             loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
@@ -127,12 +128,19 @@ class Model:
         return [checkpoint, tensor_board, reduce_lr, early_stop]
 
 
-def main(params={}):
-    model = Model(Config(params))
-    model.run()
+def test():
+    model_dir = 'run_output_2018_08_05_18_23_05'
+    model = Model(Config(model_dir))
+    model.test()
 
 
-def main_params_search():
+def train(params={}):
+    model = Model(Config(params=params))
+    model.train()
+    model.test()
+
+
+def params_search():
     seed = 1
     num_runs = 20
 
@@ -142,8 +150,10 @@ def main_params_search():
         lr = 10 ** np.random.uniform(-6, -2)
 
         print('Run #{}, lr={}'.format(idx, lr))
-        main({'lr': lr})
+        train({'lr': lr})
 
 
 if __name__ == '__main__':
-    main_params_search()
+    train()
+    # test()
+    # params_search()

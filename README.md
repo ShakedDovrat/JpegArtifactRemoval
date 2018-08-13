@@ -31,6 +31,3 @@ https://dmitryulyanov.github.io/deep_image_prior
 
 Beyond a Gaussian Denoiser: Residual Learning of Deep CNN for Image Denoising
 https://arxiv.org/pdf/1608.03981.pdf
-
-#### TODO
-1. Fix the sqrt in RMSE to be per-image instead of per-batch.
