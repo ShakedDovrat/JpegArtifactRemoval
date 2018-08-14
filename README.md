@@ -3,9 +3,9 @@
 ## Current Solution
 Simple network for image-to-image translation. Implemented variations:
 1. U-net
-2. SR-CNN: C. Dong, C. C. Loy, K. He, and X. Tang. "Learning a deep convolutional network for image super-resolution"
+2. SRCNN: C. Dong, C. C. Loy, K. He, and X. Tang. "Learning a deep convolutional network for image super-resolution"
 3. AR-CNN: C. Dong, Y. Deng, C. Change Loy, and X. Tang, “Compression artifacts reduction by a deep convolutional network”
-4. DN-CNN: K. Zhang, W. Zuo, Y. Chen, D. Meng, and L. Zhang. "Beyond a Gaussian denoiser: Residual learning of deep CNN for image denoising"
+4. DnCNN: K. Zhang, W. Zuo, Y. Chen, D. Meng, and L. Zhang. "Beyond a Gaussian denoiser: Residual learning of deep CNN for image denoising"
 
 ## Future Ideas
 1. Add data augmentations.
@@ -32,3 +32,12 @@ https://dmitryulyanov.github.io/deep_image_prior
 
 Beyond a Gaussian Denoiser: Residual Learning of Deep CNN for Image Denoising
 https://arxiv.org/pdf/1608.03981.pdf
+
+
+### Preliminary Results
+
+Training and validation sets mean squared error in one experiment with a DnCNN model.
+
+![](training-example.png)
+
+The test set RMSE after training was `1.50187`

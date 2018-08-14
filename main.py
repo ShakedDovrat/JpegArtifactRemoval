@@ -156,7 +156,7 @@ def params_search():
     np.random.seed(seed)
 
     for idx in range(num_runs):
-        lr = 10 ** np.random.uniform(-6, -2)
+        lr = 10 ** np.random.uniform(-4, -1)
         experiment_name = '#{0}-lr={1:1.2e}'.format(idx, lr)
 
         train(experiment_name=experiment_name, lr=lr)
