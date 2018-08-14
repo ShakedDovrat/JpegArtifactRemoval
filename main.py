@@ -8,14 +8,17 @@ import numpy as np
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
+from keras.utils import generic_utils
 import matplotlib.pyplot as plt
 
 from data_handling import DataGenerator, DataNormalizer
 from models import identity, simplest, unet, unet_16, srcnn, ar_cnn, dn_cnn_b
 
+# os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 
 class Config:
-    def __init__(self, model_dir=None, params={}):
+    def __init__(self, experiment_name='', model_dir=None, **params):
         self.images_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/data/takehome'
         base_output_dir = '/media/almond/magnetic-2TB/science/viz-ai-exercise/output'
 
@@ -34,7 +37,8 @@ class Config:
         self.model_fun = dn_cnn_b  # srcnn,simplest,unet,unet_16,ar_cnn
         self.is_residual = self.model_fun.__name__.startswith('dn_cnn')
 
-        model_dir = model_dir or 'run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S')
+        experiment_name = params.get('experiment_name', experiment_name)
+        model_dir = model_dir or ('run_output_' + time.strftime('%Y_%m_%d_%H_%M_%S_') + experiment_name)
         self.run_output_dir = os.path.join(base_output_dir, model_dir)
         if not os.path.exists(self.run_output_dir):
             os.makedirs(self.run_output_dir)
@@ -78,15 +82,16 @@ class Model:
         self.model = load_model(self.config.trained_model_path)
         self._evaluate('test')
 
-    def _evaluate(self, dataset_name='val'):
+    def _evaluate(self, dataset_name):
         if self.config.is_residual:
             generator = self.data_generators[dataset_name]
             rmse = np.zeros((self.config.batch_size, len(generator)))
+            progress_bar = generic_utils.Progbar(len(generator))
             for i in range(len(generator)):
                 x, y = generator[i]
-                y_res = self.model.predict(x)
-                y_hat = x + y_res
+                y_hat = self.model.predict(x)
                 rmse[:, i] = [np.linalg.norm(diff.flatten(), ord=2) for diff in y_hat - y]
+                progress_bar.add(1)
             rmse_total = np.mean(rmse.flatten())
             result_str = '{}: rmse = {}'.format(dataset_name, rmse_total)
         else:
@@ -148,13 +153,12 @@ class Model:
         plt.close()
 
 
-def test():
-    model_dir = 'run_output_2018_08_05_18_23_05'
-    model = Model(Config(model_dir))
+def test(model_dir):
+    model = Model(Config(model_dir + '-test', model_dir=model_dir))
     model.test()
 
 
-def train(params={}):
+def train(**params):
     model = Model(Config(params=params))
     model.train()
     model.test()
@@ -168,12 +172,12 @@ def params_search():
 
     for idx in range(num_runs):
         lr = 10 ** np.random.uniform(-6, -2)
+        experiment_name = '#{0}-lr={1:1.2e}'.format(idx, lr)
 
-        print('Run #{}, lr={}'.format(idx, lr))
-        train({'lr': lr})
+        train(experiment_name=experiment_name, lr=lr)
 
 
 if __name__ == '__main__':
-    # train()
-    # test()
-    params_search()
+    # train({'lr': 1e-2})
+    test('run_output_2018_08_14_02_52_30')
+    # params_search()
