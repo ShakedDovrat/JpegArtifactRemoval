@@ -8,13 +8,10 @@ import numpy as np
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, ReduceLROnPlateau
 from keras.models import load_model
-from keras.utils import generic_utils
 import matplotlib.pyplot as plt
 
 from data_handling import DataGenerator, DataNormalizer
 from models import identity, simplest, unet, unet_16, srcnn, ar_cnn, dn_cnn_b
-
-# os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 
 class Config:
@@ -83,21 +80,9 @@ class Model:
         self._evaluate('test')
 
     def _evaluate(self, dataset_name):
-        if self.config.is_residual:
-            generator = self.data_generators[dataset_name]
-            rmse = np.zeros((self.config.batch_size, len(generator)))
-            progress_bar = generic_utils.Progbar(len(generator))
-            for i in range(len(generator)):
-                x, y = generator[i]
-                y_hat = self.model.predict(x)
-                rmse[:, i] = [np.linalg.norm(diff.flatten(), ord=2) for diff in y_hat - y]
-                progress_bar.add(1)
-            rmse_total = np.mean(rmse.flatten())
-            result_str = '{}: rmse = {}'.format(dataset_name, rmse_total)
-        else:
-            loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
-            loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
-            result_str = '{}: loss_rmse = {}; metric_rmse = {}'.format(dataset_name, loss_rmse, metric_rmse)
+        loss_mse, metric_mse = self.model.evaluate_generator(self.data_generators[dataset_name])
+        loss_rmse, metric_rmse = np.sqrt(loss_mse), np.sqrt(metric_mse)
+        result_str = '{}: loss_rmse = {}; metric_rmse = {}'.format(dataset_name, loss_rmse, metric_rmse)
         logging.info(result_str)
 
     def _build_model(self):
@@ -141,7 +126,7 @@ class Model:
             plt.title(title)
             plt.ylabel(metric_name)
             plt.xlabel('epoch')
-            plt.legend(['train', 'test'], loc='upper left')
+            plt.legend(['train', 'val'], loc='upper left')
 
         plt.figure()
         plt.subplot(211)
